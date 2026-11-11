@@ -1,10 +1,14 @@
 ﻿var keys = {
     bind: function() {
-        $(document).on('keydown', function(event) {
+        keys.unbind();
+        $(document).on('keydown.mario', function(event) {
             return keys.handler(event, true);
         });
-        $(document).on('keyup', function(event) {
+        $(document).on('keyup.mario', function(event) {
             return keys.handler(event, false);
+        });
+        $(window).on('blur.mario', function() {
+            keys.reset();
         });
     },
     reset: function() {
@@ -12,29 +16,39 @@
         keys.right = false;
         keys.accelerate = false;
         keys.up = false;
+        keys.jumpQueued = false;
         keys.down = false;
     },
     unbind: function() {
-        $(document).off('keydown');
-        $(document).off('keyup');
+        $(document).off('.mario');
+        $(window).off('.mario');
     },
     handler: function(event, status) {
+        if (!keys.enabled) {
+            return true;
+        }
+
         switch (event.keyCode) {
-            case 57392: // CTRL on MAC
-            case 17: // CTRL
-            case 65: // A
+            case 57392:
+            case 17:
+            case 16:
+            case 65:
                 keys.accelerate = status;
                 break;
-            case 40: // DOWN ARROW
+            case 40:
                 keys.down = status;
                 break;
-            case 39: // RIGHT ARROW
+            case 39:
                 keys.right = status;
                 break;
-            case 37: // LEFT ARROW
+            case 37:
                 keys.left = status;
                 break;
-            case 32: // SPACEBAR
+            case 38:
+            case 32:
+                if (status && !keys.up) {
+                    keys.jumpQueued = true;
+                }
                 keys.up = status;
                 break;
             default:
@@ -44,12 +58,13 @@
         event.preventDefault();
         return false;
     },
+    enabled: true,
     accelerate: false,
     left: false,
     up: false,
+    jumpQueued: false,
     right: false,
     down: false,
 };
 
-// Now you can bind the keys using the following line:
 keys.bind();

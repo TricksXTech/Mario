@@ -1,8 +1,8 @@
 ﻿<!doctype html>
 <html>
 <head>
-<meta charset=utf-8 />
-<title>Super Mario HTML5 Test</title>
+<meta charset="utf-8" />
+<title>Mario - TricksXTech</title>
 <link href="Content/style.css" rel="stylesheet" />
 </head>
 <body>
@@ -11,8 +11,51 @@
 </div>
 <div id="coinNumber" class="gauge">0</div>
 <div id="coin" class="gaugeSprite"></div>
+<button id="helpBtn" type="button" class="hudButton" title="Game Controls &amp; Guide (H)">? HELP</button>
 <div id="liveNumber" class="gauge">0</div>
 <div id="live" class="gaugeSprite"></div>
+<div id="pauseBanner" role="status" aria-live="polite">PAUSED &mdash; Press P to Resume</div>
+<div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
+  <div id="helpCard">
+    <div class="helpHeader">
+      <h2 id="helpTitle">GAME GUIDE</h2>
+      <button id="closeHelpIcon" type="button" class="closeIcon" aria-label="Close Help">&times;</button>
+    </div>
+    <div class="helpBody">
+      <div class="helpSection">
+        <h3>Controls</h3>
+        <ul class="helpList">
+          <li><span class="keyGroup"><kbd>&larr;</kbd> <kbd>&rarr;</kbd></span><span>Move Left / Right</span></li>
+          <li><span class="keyGroup"><kbd>&uarr;</kbd> or <kbd>Space</kbd></span><span>Jump &amp; Stomp Enemies</span></li>
+          <li><span class="keyGroup"><kbd>&darr;</kbd></span><span>Crouch</span></li>
+          <li><span class="keyGroup"><kbd>Shift</kbd> / <kbd>Ctrl</kbd> / <kbd>A</kbd></span><span>Sprint &amp; Shoot Fireballs (Fire Mario)</span></li>
+          <li><span class="keyGroup"><kbd>H</kbd> or <kbd>Esc</kbd></span><span>Open / Close Help (Pauses Game)</span></li>
+          <li><span class="keyGroup"><kbd>P</kbd></span><span>Pause / Resume Game</span></li>
+        </ul>
+      </div>
+      <div class="helpSection">
+        <h3>Power-Ups &amp; Items</h3>
+        <ul class="helpList plainList">
+          <li><strong>Coins:</strong> Collect 100 coins to earn an extra life (+1 UP).</li>
+          <li><strong>Mushroom (<code>?</code> Box):</strong> Grow into Big Mario to survive a hit.</li>
+          <li><strong>Fire Flower (<code>?</code> Box when Big):</strong> Throw bouncing fireballs with Sprint/Fire keys.</li>
+          <li><strong>Star (<code>?</code> Box):</strong> Temporary invincibility &mdash; defeat enemies on contact.</li>
+        </ul>
+      </div>
+      <div class="helpSection">
+        <h3>Gameplay Tips</h3>
+        <ul class="helpList plainList">
+          <li>Stomp <strong>Goombas</strong> and <strong>Green Turtles</strong> from above; kick shells to clear enemies ahead.</li>
+          <li>Avoid <strong>Spiked Turtles</strong> and <strong>Piranha Plants</strong> &mdash; use Fireballs or a Star instead.</li>
+          <li>Reach the far right of each stage to advance to the next level.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="helpFooter">
+      <button id="closeHelpBtn" type="button" class="primaryBtn">RESUME GAME</button>
+    </div>
+  </div>
+</div>
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script src="Scripts/testlevels.js"></script>

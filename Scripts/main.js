@@ -1,16 +1,5 @@
-﻿/*
- * *****
- * WRITTEN BY FLORIAN RAPPL, 2012.
- * florian-rappl.de
- * mail@florian-rappl.de
- * *****
- */
+﻿
 
-/*
- * -------------------------------------------
- * BASE CLASS
- * -------------------------------------------
- */
 var Base = Class.extend({
 	init: function(x, y) {
 		this.setPosition(x || 0, y || 0);
@@ -42,10 +31,10 @@ var Base = Class.extend({
 		if(id) {
 			if(this.frameID === id)
 				return true;
-			
+
 			this.frameID = id;
 		}
-		
+
 		this.currentFrame = 0;
 		this.frameTick = frames ? (1000 / fps / constants.interval) : 0;
 		this.frames = frames;
@@ -61,13 +50,13 @@ var Base = Class.extend({
 	playFrame: function() {
 		if(this.frameTick && this.view) {
 			this.frameCount++;
-			
+
 			if(this.frameCount >= this.frameTick) {			
 				this.frameCount = 0;
-				
+
 				if(this.currentFrame === this.frames)
 					this.currentFrame = 0;
-					
+
 				var $el = this.view;
 				$el.css('background-position', '-' + (this.image.x + this.width * ((this.rewindFrames ? this.frames - 1 : 0) - this.currentFrame)) + 'px -' + this.image.y + 'px');
 				this.currentFrame++;
@@ -76,11 +65,6 @@ var Base = Class.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * GAUGE CLASS
- * -------------------------------------------
- */
 var Gauge = Base.extend({
 	init: function(id, startImgX, startImgY, fps, frames, rewind) {
 		this._super(0, 0);
@@ -91,11 +75,6 @@ var Gauge = Base.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * LEVEL CLASS
- * -------------------------------------------
- */
 var Level = Base.extend({
 	init: function(id) {
 		this.world = $('#' + id);
@@ -112,7 +91,7 @@ var Level = Base.extend({
 	reload: function() {
 		var settings = {};
 		this.pause();
-		
+
 		for(var i = this.figures.length; i--; ) {
 			if(this.figures[i] instanceof Mario) {
 				settings.lifes = this.figures[i].lifes - 1;
@@ -120,14 +99,14 @@ var Level = Base.extend({
 				break;
 			}
 		}
-		
+
 		this.reset();
-		
+
 		if(settings.lifes < 0) {
 			this.load(definedLevels[0]);
 		} else {		
 			this.load(this.raw);
-			
+
 			for(var i = this.figures.length; i--; ) {
 				if(this.figures[i] instanceof Mario) {
 					this.figures[i].setLifes(settings.lifes || 0);
@@ -136,7 +115,7 @@ var Level = Base.extend({
 				}
 			}
 		}
-		
+
 		this.start();
 	},
 	load: function(level) {
@@ -146,7 +125,7 @@ var Level = Base.extend({
 
 			this.reset();
 		}
-			
+
 		this.setPosition(0, 0);
 		this.setSize(level.width * 32, level.height * 32);
 		this.setImage(level.background);
@@ -154,20 +133,20 @@ var Level = Base.extend({
 		this.id = level.id;
 		this.active = true;
 		var data = level.data;
-		
+
 		for(var i = 0; i < level.width; i++) {
 			var t = [];
-			
+
 			for(var j = 0; j < level.height; j++) {
 				t.push('');
 			}
-			
+
 			this.obstacles.push(t);
 		}
-		
+
 		for(var i = 0, width = data.length; i < width; i++) {
 			var col = data[i];
-			
+
 			for(var j = 0, height = col.length; j < height; j++) {
 				if(reflection[col[j]])
 					new (reflection[col[j]])(i * 32, (height - j - 1) * 32, this);
@@ -180,10 +159,10 @@ var Level = Base.extend({
 	nextLoad: function() {
 		if(this.nextCycles)
 			return;
-		
+
 		var settings = {};
 		this.pause();
-		
+
 		for(var i = this.figures.length; i--; ) {
 			if(this.figures[i] instanceof Mario) {
 				settings.lifes = this.figures[i].lifes;
@@ -193,10 +172,11 @@ var Level = Base.extend({
 				break;
 			}
 		}
-		
+
 		this.reset();
-		this.load(definedLevels[this.id + 1]);
-		
+		var nextIndex = (this.id + 1) % definedLevels.length;
+		this.load(definedLevels[nextIndex]);
+
 		for(var i = this.figures.length; i--; ) {
 			if(this.figures[i] instanceof Mario) {
 				this.figures[i].setLifes(settings.lifes || 0);
@@ -206,7 +186,7 @@ var Level = Base.extend({
 				break;
 			}
 		}
-		
+
 		this.start();
 	},
 	getGridWidth: function() {
@@ -240,17 +220,17 @@ var Level = Base.extend({
 			this.nextLoad();			
 			return;
 		}
-		
+
 		var i = 0, j = 0, figure, opponent;
-		
+
 		for(i = this.figures.length; i--; ) {
 			figure = this.figures[i];
-			
+
 			if(figure.dead) {
 				if(!figure.death()) {
 					if(figure instanceof Mario)
 						return this.reload();
-						
+
 					figure.view.remove();
 					this.figures.splice(i, 1);
 				} else
@@ -260,9 +240,9 @@ var Level = Base.extend({
 					for(j = i; j--; ) {
 						if(figure.dead)
 							break;
-							
+
 						opponent = this.figures[j];
-						
+
 						if(!opponent.dead && q2q(figure, opponent)) {
 							figure.hit(opponent);
 							opponent.hit(figure);
@@ -270,20 +250,23 @@ var Level = Base.extend({
 					}
 				}
 			}
-			
+
 			if(!figure.dead) {
 				figure.move();
 				figure.playFrame();
 			}
 		}
-		
+
 		for(i = this.items.length; i--; )
 			this.items[i].playFrame();
-		
+
 		this.coinGauge.playFrame();
 		this.liveGauge.playFrame();
 	},
 	start: function() {
+		if(this.loop)
+			return;
+
 		var me = this;
 		me.loop = setInterval(function() {
 			me.tick.apply(me);
@@ -314,11 +297,6 @@ var Level = Base.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * FIGURE CLASS
- * -------------------------------------------
- */
 var Figure = Base.extend({
 	init: function(x, y, level) {
 		this.view = $(DIV).addClass(CLS_FIGURE).appendTo(level.world);
@@ -368,7 +346,7 @@ var Figure = Base.extend({
 	setGridPosition: function(x, y) {
 		this.i = Math.floor((x + 16) / 32);
 		this.j = Math.ceil(this.level.getGridHeight() - 1 - y / 32);
-		
+
 		if(this.j > this.level.getGridHeight())
 			this.die();
 	},
@@ -378,7 +356,7 @@ var Figure = Base.extend({
 	setVelocity: function(vx, vy) {
 		this.vx = vx;
 		this.vy = vy;
-		
+
 		if(vx > 0)
 			this.direction = directions.right;
 		else if(vx < 0)
@@ -388,55 +366,55 @@ var Figure = Base.extend({
 		return { vx : this.vx, vy : this.vy };
 	},
 	hit: function(opponent) {
-		
+
 	},
 	collides: function(is, ie, js, je, blocking) {
 		var isHero = this instanceof Hero;
-		
+
 		if(is < 0 || ie >= this.level.obstacles.length)
 			return true;
-			
+
 		if(js < 0 || je >= this.level.getGridHeight())
 			return false;
-			
+
 		for(var i = is; i <= ie; i++) {
 			for(var j = je; j >= js; j--) {
 				var obj = this.level.obstacles[i][j];
-				
+
 				if(obj) {
 					if(obj instanceof Item && isHero && (blocking === ground_blocking.bottom || obj.blocking === ground_blocking.none))
 						obj.activate(this);
-					
+
 					if((obj.blocking & blocking) === blocking)
 						return true;
 				}
 			}
 		}
-		
+
 		return false;
 	},
 	move: function() {
 		var vx = this.vx;
 		var vy = this.vy - constants.gravity;
-		
+
 		var s = this.state;
-		
+
 		var x = this.x;
 		var y = this.y;
-		
+
 		var dx = Math.sign(vx);
 		var dy = Math.sign(vy);
-		
+
 		var is = this.i;
 		var ie = is;
-		
+
 		var js = Math.ceil(this.level.getGridHeight() - s - (y + 31) / 32);
 		var je = this.j;
-		
+
 		var d = 0, b = ground_blocking.none;
 		var onground = false;
 		var t = Math.floor((x + 16 + vx) / 32);
-		
+
 		if(dx > 0) {
 			d = t - ie;
 			t = ie;
@@ -446,21 +424,21 @@ var Figure = Base.extend({
 			t = is;
 			b = ground_blocking.right;
 		}
-		
+
 		x += vx;
-		
+
 		for(var i = 0; i < d; i++) {
 			if(this.collides(t + dx, t + dx, js, je, b)) {
 				vx = 0;
 				x = t * 32 + 15 * dx;
 				break;
 			}
-			
+
 			t += dx;
 			is += dx;
 			ie += dx;
 		}
-		
+
 		if(dy > 0) {
 			t = Math.ceil(this.level.getGridHeight() - s - (y + 31 + vy) / 32);
 			d = js - t;
@@ -473,9 +451,9 @@ var Figure = Base.extend({
 			b = ground_blocking.top;
 		} else
 			d = 0;
-		
+
 		y += vy;
-		
+
 		for(var i = 0; i < d; i++) {
 			if(this.collides(is, ie, t - dy, t - dy, b)) {
 				onground = dy < 0;
@@ -483,10 +461,10 @@ var Figure = Base.extend({
 				y = this.level.height - (t + 1) * 32 - (dy > 0 ? (s - 1) * 32 : 0);
 				break;
 			}
-			
+
 			t -= dy;
 		}
-		
+
 		this.onground = onground;
 		this.setVelocity(vx, vy);
 		this.setPosition(x, y);
@@ -499,11 +477,6 @@ var Figure = Base.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * MATTER CLASS
- * -------------------------------------------
- */
 var Matter = Base.extend({
 	init: function(x, y, blocking, level) {
 		this.blocking = blocking;
@@ -532,22 +505,12 @@ var Matter = Base.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * GROUND CLASS
- * -------------------------------------------
- */
 var Ground = Matter.extend({
 	init: function(x, y, blocking, level) {
 		this._super(x, y, blocking, level);
 	},
 });
 
-/*
- * -------------------------------------------
- * GRASS CLASSES
- * -------------------------------------------
- */
 var TopGrass = Ground.extend({
 	init: function(x, y, level) {
 		var blocking = ground_blocking.top;
@@ -598,11 +561,6 @@ var TopLeftRoundedGrass = Ground.extend({
 	},
 }, 'grass_top_left_rounded');
 
-/*
- * -------------------------------------------
- * STONE CLASSES
- * -------------------------------------------
- */
 var Stone = Ground.extend({
 	init: function(x, y, level) {
 		var blocking = ground_blocking.all;
@@ -618,11 +576,6 @@ var BrownBlock = Ground.extend({
 	},
 }, 'brown_block');
 
-/*
- * -------------------------------------------
- * PIPE CLASSES
- * -------------------------------------------
- */
 var RightTopPipe = Ground.extend({
 	init: function(x, y, level) {
 		var blocking = ground_blocking.all;
@@ -652,11 +605,6 @@ var LeftPipe = Ground.extend({
 	},
 }, 'pipe_left');
 
-/*
- * -------------------------------------------
- * DECORATION CLASS
- * -------------------------------------------
- */
 var Decoration = Matter.extend({
 	init: function(x, y, level) {
 		this._super(x, y, ground_blocking.none, level);
@@ -678,11 +626,6 @@ var Decoration = Matter.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * DECORATION GRASS CLASSES
- * -------------------------------------------
- */
 var TopRightCornerGrass = Decoration.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -696,11 +639,6 @@ var TopLeftCornerGrass = Decoration.extend({
 	},
 }, 'grass_top_left_corner');
 
-/*
- * -------------------------------------------
- * SOIL CLASSES
- * -------------------------------------------
- */
 var Soil = Decoration.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -720,11 +658,6 @@ var LeftSoil = Decoration.extend({
 	},
 }, 'soil_left');
 
-/*
- * -------------------------------------------
- * BUSH CLASSES
- * -------------------------------------------
- */
 var RightBush = Decoration.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -756,11 +689,6 @@ var LeftBush = Decoration.extend({
 	},
 }, 'bush_left');
 
-/*
- * -------------------------------------------
- * GRASS-SOIL CLASSES
- * -------------------------------------------
- */
 var TopRightGrassSoil = Decoration.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -774,11 +702,6 @@ var TopLeftGrassSoil = Decoration.extend({
 	},
 }, 'grass_top_left_rounded_soil');
 
-/*
- * -------------------------------------------
- * PLANTED SOIL CLASSES
- * -------------------------------------------
- */
 var RightPlantedSoil = Decoration.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -798,11 +721,6 @@ var LeftPlantedSoil = Decoration.extend({
 	},
 }, 'planted_soil_left');
 
-/*
- * -------------------------------------------
- * PIPE DECORATION
- * -------------------------------------------
- */
 var RightPipeGrass = Decoration.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -828,11 +746,6 @@ var LeftPipeSoil = Decoration.extend({
 	},
 }, 'pipe_left_soil');
 
-/*
- * -------------------------------------------
- * ITEM CLASS
- * -------------------------------------------
- */
 var Item = Matter.extend({
 	init: function(x, y, isBlocking, level) {
 		this.isBouncing = false;
@@ -853,10 +766,10 @@ var Item = Matter.extend({
 	},
 	bounce: function() {
 		this.isBouncing = true;
-		
+
 		for(var i = this.level.figures.length; i--; ) {
 			var fig = this.level.figures[i];
-			
+
 			if(fig.y === this.y + 32 && fig.x >= this.x - 16 && fig.x <= this.x + 16) {
 				if(fig instanceof ItemFigure)
 					fig.setVelocity(fig.vx, constants.bounce);
@@ -869,7 +782,7 @@ var Item = Matter.extend({
 		if(this.isBouncing) {
 			this.view.css({ 'bottom' : (this.bounceDir > 0 ? '+' : '-') + '=' + this.bounceStep + 'px' });
 			this.bounceCount += this.bounceDir;
-			
+
 			if(this.bounceCount === this.bounceFrames)
 				this.bounceDir = -1;
 			else if(this.bounceCount === 0) {
@@ -877,16 +790,11 @@ var Item = Matter.extend({
 				this.isBouncing = false;
 			}
 		}
-		
+
 		this._super();
 	},
 });
 
-/*
- * -------------------------------------------
- * COIN CLASSES
- * -------------------------------------------
- */
 var Coin = Item.extend({
 	init: function(x, y, level) {
 		this._super(x, y, false, level);
@@ -937,7 +845,7 @@ var CoinBox = Item.extend({
 	setAmount: function(amount) {
 		this.items = [];
 		this.actors = [];
-		
+
 		for(var i = 0; i < amount; i++)
 			this.items.push(new CoinBoxCoin(this.x, this.y, this.level));
 	},
@@ -948,12 +856,12 @@ var CoinBox = Item.extend({
 				var coin = this.items.pop();
 				coin.activate(from);
 				this.actors.push(coin);
-				
+
 				if(!this.items.length)
 					this.setImage(images.objects, 514, 194);
 			}
 		}
-			
+
 		this._super(from);
 	},
 	playFrame: function() {
@@ -963,7 +871,7 @@ var CoinBox = Item.extend({
 				this.actors.splice(i, 1);
 			}
 		}
-		
+
 		this._super();
 	},
 }, 'coinbox');
@@ -973,22 +881,12 @@ var MultipleCoinBox = CoinBox.extend({
 	},
 }, 'multiple_coinbox');
 
-/*
- * -------------------------------------------
- * ITEMFIGURE CLASS
- * -------------------------------------------
- */
 var ItemFigure = Figure.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
 	},
 });
 
-/*
- * -------------------------------------------
- * STARBOX CLASS
- * -------------------------------------------
- */
 var StarBox = Item.extend({
 	init: function(x, y, level) {
 		this._super(x, y, true, level);
@@ -1003,7 +901,7 @@ var StarBox = Item.extend({
 			this.bounce();
 			this.setImage(images.objects, 514, 194);
 		}
-		
+
 		this._super(from);
 	},
 }, 'starbox');
@@ -1031,7 +929,7 @@ var Star = ItemFigure.extend({
 			this.vy += this.vy <= -constants.star_vy ? constants.gravity : constants.gravity / 2;
 			this._super();
 		}
-		
+
 		if(this.taken)
 			this.taken--;
 	},
@@ -1043,11 +941,6 @@ var Star = ItemFigure.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * MUSHROOMBOX CLASS
- * -------------------------------------------
- */
 var MushroomBox = Item.extend({
 	init: function(x, y, level) {
 		this._super(x, y, true, level);
@@ -1062,12 +955,12 @@ var MushroomBox = Item.extend({
 				this.mushroom.release(mushroom_mode.mushroom);
 			else
 				this.mushroom.release(mushroom_mode.plant);
-			
+
 			this.clearFrames();
 			this.bounce();
 			this.setImage(images.objects, 514, 194);
 		}
-			
+
 		this._super(from);
 	},
 }, 'mushroombox');
@@ -1083,27 +976,27 @@ var Mushroom = ItemFigure.extend({
 	release: function(mode) {
 		this.released = 4;
 		this.level.playSound('mushroom');
-		
+
 		if(mode === mushroom_mode.plant)
 			this.setImage(images.objects, 548, 60);
-			
+
 		this.mode = mode;
 		this.view.show();
 	},
 	move: function() {
 		if(this.active) {
 			this._super();
-		
+
 			if(this.mode === mushroom_mode.mushroom && this.vx === 0)
 				this.setVelocity(this.direction === directions.right ? -constants.mushroom_v : constants.mushroom_v, this.vy);
 		} else if(this.released) {
 			this.released--;
 			this.setPosition(this.x, this.y + 8);
-			
+
 			if(!this.released) {
 				this.active = true;
 				this.view.css('z-index', 99);
-				
+
 				if(this.mode === mushroom_mode.mushroom)
 					this.setVelocity(constants.mushroom_v, constants.gravity);
 			}
@@ -1115,17 +1008,12 @@ var Mushroom = ItemFigure.extend({
 				opponent.grow();
 			else if(this.mode === mushroom_mode.plant)
 				opponent.shooter();
-				
+
 			this.die();
 		}
 	},
 });
 
-/*
- * -------------------------------------------
- * BULLET CLASS
- * -------------------------------------------
- */
 var Bullet = Figure.extend({
 	init: function(parent) {
 		this._super(parent.x + 31, parent.y + 14, parent.level);
@@ -1140,12 +1028,12 @@ var Bullet = Figure.extend({
 	},
 	setVelocity: function(vx, vy) {
 		this._super(vx, vy);
-	
+
 		if(this.vx === 0) {
 			var s = this.speed * Math.sign(this.speed);
 			this.vx = this.direction === directions.right ? -s : s;
 		}
-		
+
 		if(this.onground)
 			this.vy = constants.bounce;
 	},
@@ -1163,22 +1051,12 @@ var Bullet = Figure.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * HERO CLASS
- * -------------------------------------------
- */
 var Hero = Figure.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
 	},
 });
 
-/*
- * -------------------------------------------
- * MARIO CLASS
- * -------------------------------------------
- */
 var Mario = Hero.extend({
 	init: function(x, y, level) {
 		this.standSprites = [
@@ -1232,18 +1110,24 @@ var Mario = Hero.extend({
 	input: function(keys) {
 		this.fast = keys.accelerate;
 		this.crouching = keys.down;
-		
+
 		if(!this.crouching) {
-			if(this.onground && keys.up)
+			if(this.onground && (keys.up || keys.jumpQueued)) {
+				keys.jumpQueued = false;
 				this.jump();
-				
+			} else if(!this.onground) {
+				keys.jumpQueued = false;
+			}
+
 			if(keys.accelerate && this.marioState === mario_states.fire)
 				this.shoot();
-				
+
 			if(keys.right || keys.left)
 				this.walk(keys.left, keys.accelerate);
 			else
 				this.vx = 0;
+		} else {
+			keys.jumpQueued = false;
 		}
 	},
 	victory: function() {
@@ -1272,7 +1156,7 @@ var Mario = Hero.extend({
 			else
 				this.stand();
 		}
-	
+
 		this._super(vx, vy);
 	},
 	blink: function(times) {
@@ -1296,7 +1180,7 @@ var Mario = Hero.extend({
 			this.grow();
 		else
 			this.level.playSound('grow');
-			
+
 		this.setMarioState(mario_states.fire);
 	},
 	walk: function(reverse, fast) {
@@ -1345,29 +1229,29 @@ var Mario = Hero.extend({
 		if(this.blinking) {
 			if(this.blinking % constants.blinkfactor === 0)
 				this.view.toggle();
-				
+
 			this.blinking--;
 		}
-		
+
 		if(this.cooldown)
 			this.cooldown--;
-		
+
 		if(this.deadly)
 			this.deadly--;
-		
+
 		if(this.invulnerable)
 			this.invulnerable--;
-		
+
 		this._super();
 	},
 	setCoins: function(coins) {
 		this.coins = coins;
-		
+
 		if(this.coins >= constants.max_coins) {
 			this.addLife()
 			this.coins -= constants.max_coins;
 		}
-				
+
 		this.level.world.parent().children('#coinNumber').text(this.coins);
 	},
 	addLife: function() {
@@ -1383,18 +1267,18 @@ var Mario = Hero.extend({
 			this.deathBeginWait--;
 			return true;
 		}
-		
+
 		if(this.deathEndWait)
 			return --this.deathEndWait;
-		
+
 		this.view.css({ 'bottom' : (this.deathDir > 0 ? '+' : '-') + '=' + (this.deathDir > 0 ? this.deathStepUp : this.deathStepDown) + 'px' });
 		this.deathCount += this.deathDir;
-		
+
 		if(this.deathCount === this.deathFrames)
 			this.deathDir = -1;
 		else if(this.deathCount === 0)
 			this.deathEndWait = Math.floor(1800 / constants.interval);
-			
+
 		return true;
 	},
 	die: function() {
@@ -1421,11 +1305,6 @@ var Mario = Hero.extend({
 	},
 }, 'mario');
 
-/*
- * -------------------------------------------
- * ENEMY CLASS
- * -------------------------------------------
- */
 var Enemy = Figure.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -1442,7 +1321,7 @@ var Enemy = Figure.extend({
 	move: function() {
 		if(!this.invisible) {
 			this._super();
-		
+
 			if(this.vx === 0) {
 				var s = this.speed * Math.sign(this.speed);
 				this.setVelocity(this.direction === directions.right ? -s : s, this.vy);
@@ -1454,14 +1333,14 @@ var Enemy = Figure.extend({
 			for(var i = is; i <= ie; i++) {
 				if(i < 0 || i >= this.level.getGridWidth())
 					return true;
-					
+
 				var obj = this.level.obstacles[i][this.j + 1];
-				
+
 				if(!obj || (obj.blocking & ground_blocking.top) !== ground_blocking.top)
 					return true;
 			}
 		}
-		
+
 		return this._super(is, ie, js, je, blocking);
 	},
 	setSpeed: function(v) {
@@ -1474,7 +1353,7 @@ var Enemy = Figure.extend({
 	hit: function(opponent) {
 		if(this.invisible)
 			return;
-			
+
 		if(opponent instanceof Mario) {
 			if(opponent.vy < 0 && opponent.y - opponent.vy >= this.y + this.state * 32) {
 				opponent.setVelocity(opponent.vx, constants.bounce);
@@ -1486,11 +1365,6 @@ var Enemy = Figure.extend({
 	},
 });
 
-/*
- * -------------------------------------------
- * GUMPA CLASS
- * -------------------------------------------
- */
 var Gumpa = Enemy.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -1498,10 +1372,11 @@ var Gumpa = Enemy.extend({
 		this.setSpeed(constants.ballmonster_v);
 		this.death_mode = death_modes.normal;
 		this.deathCount = 0;
+		this.deathDir = 1;
 	},
 	setVelocity: function(vx, vy) {
 		this._super(vx, vy);
-		
+
 		if(this.direction === directions.left) {
 			if(!this.setupFrames(6, 2, false, 'LeftWalk'))
 				this.setImage(images.enemies, 34, 188);
@@ -1513,20 +1388,20 @@ var Gumpa = Enemy.extend({
 	death: function() {
 		if(this.death_mode === death_modes.normal)
 			return --this.deathCount;
-		
+
 		this.view.css({ 'bottom' : (this.deathDir > 0 ? '+' : '-') + '=' + this.deathStep + 'px' });
 		this.deathCount += this.deathDir;
-		
+
 		if(this.deathCount === this.deathFrames)
 			this.deathDir = -1;
 		else if(this.deathCount === 0)
 			return false;
-			
+
 		return true;
 	},
 	die: function() {
 		this.clearFrames();
-		
+
 		if(this.death_mode === death_modes.normal) {
 			this.level.playSound('enemy_die');
 			this.setImage(images.enemies, 102, 228);
@@ -1538,16 +1413,11 @@ var Gumpa = Enemy.extend({
 			this.deathDir = 1;
 			this.deathStep = Math.ceil(150 / this.deathFrames);
 		}
-		
+
 		this._super();
 	},
 }, 'ballmonster');
 
-/*
- * -------------------------------------------
- * TURTLESHELL CLASS
- * -------------------------------------------
- */
 var TurtleShell = Enemy.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -1567,13 +1437,14 @@ var TurtleShell = Enemy.extend({
 	hit: function(opponent) {
 		if(this.invisible)
 			return;
-			
+
 		if(this.vx) {
 			if(this.idle)
 				this.idle--;
 			else if(opponent instanceof Mario)
 				opponent.hurt(this);
 			else {
+				opponent.death_mode = death_modes.shell;
 				opponent.deathMode = death_modes.shell;
 				opponent.die();
 			}
@@ -1589,28 +1460,23 @@ var TurtleShell = Enemy.extend({
 	collides: function(is, ie, js, je, blocking) {		
 		if(is < 0 || ie >= this.level.obstacles.length)
 			return true;
-			
+
 		if(js < 0 || je >= this.level.getGridHeight())
 			return false;
-			
+
 		for(var i = is; i <= ie; i++) {
 			for(var j = je; j >= js; j--) {
 				var obj = this.level.obstacles[i][j];
-				
+
 				if(obj && ((obj.blocking & blocking) === blocking))
 					return true;
 			}
 		}
-		
+
 		return false;
 	},
 }, 'shell');
 
-/*
- * -------------------------------------------
- * GREENTURTLE CLASS
- * -------------------------------------------
- */
 var GreenTurtle = Enemy.extend({
 	init: function(x, y, level) {
 		this.walkSprites = [
@@ -1631,7 +1497,7 @@ var GreenTurtle = Enemy.extend({
 	setShell: function(shell) {
 		if(this.shell || this.wait)
 			return false;
-			
+
 		this.shell = shell;
 		shell.hide();
 		this.setState(size_states.big);
@@ -1639,7 +1505,7 @@ var GreenTurtle = Enemy.extend({
 	},
 	setState: function(state) {
 		this._super(state);
-		
+
 		if(state === size_states.big)
 			this.setSpeed(constants.big_turtle_v);
 		else
@@ -1650,14 +1516,14 @@ var GreenTurtle = Enemy.extend({
 		var rewind = this.direction === directions.right;
 		var coords = this.walkSprites[this.state - 1][rewind ? 1 : 0];
 		var label = Math.sign(vx) + '-' + this.state;
-		
+
 		if(!this.setupFrames(6, 2, rewind, label))
 			this.setImage(images.enemies, coords.x, coords.y);
 	},
 	die: function() {
 		this._super();
 		this.clearFrames();
-		
+
 		if(this.deathMode === death_modes.normal) {
 			this.deathFrames = Math.floor(600 / constants.interval);
 			this.setImage(images.enemies, 102, 437);
@@ -1669,29 +1535,29 @@ var GreenTurtle = Enemy.extend({
 	death: function() {
 		if(this.deathMode === death_modes.normal)
 			return --this.deathFrames;
-			
+
 		this.view.css({ 'bottom' : (this.deathDir > 0 ? '+' : '-') + '=' + (this.deathDir > 0 ? this.deathStepUp : this.deathStepDown) + 'px' });
 		this.deathCount += this.deathDir;
-		
+
 		if(this.deathCount === this.deathFrames)
 			this.deathDir = -1;
 		else if(this.deathCount === 0)
 			return false;
-			
+
 		return true;
 	},
 	move: function() {
 		if(this.wait)
 			this.wait--;
-			
+
 		this._super();
 	},
 	hurt: function(opponent) {	
 		this.level.playSound('enemy_die');
-		
+
 		if(this.state === size_states.small)
 			return this.die();
-		
+
 		this.wait = constants.shell_wait
 		this.setState(size_states.small);
 		this.shell.activate(this.x, this.y);
@@ -1699,11 +1565,6 @@ var GreenTurtle = Enemy.extend({
 	},
 }, 'greenturtle');
 
-/*
- * -------------------------------------------
- * SPIKEDTURTLE CLASS
- * -------------------------------------------
- */
 var SpikedTurtle = Enemy.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -1717,7 +1578,7 @@ var SpikedTurtle = Enemy.extend({
 	},
 	setVelocity: function(vx, vy) {
 		this._super(vx, vy);
-		
+
 		if(this.direction === directions.left) {
 			if(!this.setupFrames(4, 2, true, 'LeftWalk'))
 				this.setImage(images.enemies, 0, 106);
@@ -1729,12 +1590,12 @@ var SpikedTurtle = Enemy.extend({
 	death: function() {
 		this.view.css({ 'bottom' : (this.deathDir > 0 ? '+' : '-') + '=' + (this.deathDir > 0 ? this.deathStepUp : this.deathStepDown) + 'px' });
 		this.deathCount += this.deathDir;
-		
+
 		if(this.deathCount === this.deathFrames)
 			this.deathDir = -1;
 		else if(this.deathCount === 0)
 			return false;
-			
+
 		return true;
 	},
 	die: function() {
@@ -1746,18 +1607,13 @@ var SpikedTurtle = Enemy.extend({
 	hit: function(opponent) {
 		if(this.invisible)
 			return;
-			
+
 		if(opponent instanceof Mario) {
 			opponent.hurt(this);
 		}
 	},
 }, 'spikedturtle');
 
-/*
- * -------------------------------------------
- * PLANT CLASS
- * -------------------------------------------
- */
 var Plant = Enemy.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -1776,18 +1632,13 @@ var Plant = Enemy.extend({
 	hit: function(opponent) {
 		if(this.invisible)
 			return;
-			
+
 		if(opponent instanceof Mario) {
 			opponent.hurt(this);
 		}
 	},
 });
 
-/*
- * -------------------------------------------
- * STATICPLANT CLASS
- * -------------------------------------------
- */
 var StaticPlant = Plant.extend({
 	init: function(x, y, level) {
 		this._super(x, y, level);
@@ -1804,21 +1655,16 @@ var StaticPlant = Plant.extend({
 	death: function() {
 		this.view.css({ 'bottom' : (this.deathDir > 0 ? '+' : '-') + '=' + (this.deathDir > 0 ? this.deathStepUp : this.deathStepDown) + 'px' });
 		this.deathCount += this.deathDir;
-		
+
 		if(this.deathCount === this.deathFrames)
 			this.deathDir = -1;
 		else if(this.deathCount === 0)
 			return false;
-			
+
 		return true;
 	},
 }, 'staticplant');
 
-/*
- * -------------------------------------------
- * PIPEPLANT CLASS
- * -------------------------------------------
- */
 var PipePlant = Plant.extend({
 	init: function(x, y, level) {
 		this.bottom = y - 48;
@@ -1842,25 +1688,25 @@ var PipePlant = Plant.extend({
 			this.minimum = constants.pipeplant_count;
 			this.setDirection(this.direction === directions.up ? directions.down : directions.up);
 		}
-		
+
 		this._super(x, y);
 	},
 	blocked: function() {
 		if(this.y === this.bottom) {
 			var state = false;
 			this.y += 48;
-			
+
 			for(var i = this.level.figures.length; i--; ) {
 				if(this.level.figures[i] != this && q2q(this.level.figures[i], this)) {
 					state = true;
 					break;
 				}
 			}
-			
+
 			this.y -= 48;
 			return state;
 		}
-		
+
 		return false;
 	},
 	move: function() {
@@ -1879,27 +1725,107 @@ var PipePlant = Plant.extend({
 			this.setPosition(this.x, this.y - 8);
 			return --this.deathFramesExtended;
 		}
-		
+
 		this.view.css({ 'bottom' : (this.deathDir > 0 ? '+' : '-') + '=' + this.deathStep + 'px' });
 		this.deathCount += this.deathDir;
-		
+
 		if(this.deathCount === this.deathFrames)
 			this.deathDir = -1;
 		else if(this.deathCount === 0)
 			this.deathFramesExtendedActive = true;
-			
+
 		return true;
 	},
 }, 'pipeplant');
 
-/*
- * -------------------------------------------
- * DOCUMENT READY STARTUP METHOD
- * -------------------------------------------
- */
 $(document).ready(function() {
 	var level = new Level('world');
 	level.load(definedLevels[0]);
 	level.start();
 	keys.bind();
+
+	var $helpModal = $('#helpModal');
+	var $helpBtn = $('#helpBtn');
+	var $pauseBanner = $('#pauseBanner');
+	var isHelpOpen = false;
+	var isUserPaused = false;
+
+	function openHelp() {
+		if(isHelpOpen)
+			return;
+
+		isHelpOpen = true;
+		level.pause();
+		keys.reset();
+		keys.enabled = false;
+		$pauseBanner.removeClass('is-open');
+		$helpModal.addClass('is-open').attr('aria-hidden', 'false');
+	}
+
+	function closeHelp() {
+		if(!isHelpOpen)
+			return;
+
+		isHelpOpen = false;
+		$helpModal.removeClass('is-open').attr('aria-hidden', 'true');
+
+		if(isUserPaused) {
+			$pauseBanner.addClass('is-open');
+		} else {
+			keys.enabled = true;
+			level.start();
+		}
+	}
+
+	function togglePause() {
+		if(isHelpOpen)
+			return;
+
+		isUserPaused = !isUserPaused;
+
+		if(isUserPaused) {
+			level.pause();
+			keys.reset();
+			keys.enabled = false;
+			$pauseBanner.addClass('is-open');
+		} else {
+			$pauseBanner.removeClass('is-open');
+			keys.enabled = true;
+			level.start();
+		}
+	}
+
+	$helpBtn.on('click', function() {
+		$(this).blur();
+		if(isHelpOpen)
+			closeHelp();
+		else
+			openHelp();
+	});
+
+	$('#closeHelpBtn, #closeHelpIcon').on('click', function() {
+		$(this).blur();
+		closeHelp();
+	});
+
+	$helpModal.on('click', function(event) {
+		if(event.target === this)
+			closeHelp();
+	});
+
+	$(document).on('keydown.ui', function(event) {
+		if(event.keyCode === 72 || event.key === '?') {
+			event.preventDefault();
+			if(isHelpOpen)
+				closeHelp();
+			else
+				openHelp();
+		} else if(event.keyCode === 27 && isHelpOpen) {
+			event.preventDefault();
+			closeHelp();
+		} else if(event.keyCode === 80 && !isHelpOpen) {
+			event.preventDefault();
+			togglePause();
+		}
+	});
 });

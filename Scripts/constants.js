@@ -1,10 +1,4 @@
-﻿/*
- * *****
- * WRITTEN BY FLORIAN RAPPL, 2012.
- * florian-rappl.de
- * mail@florian-rappl.de
- * *****
- */
+﻿
 
 var AUDIOPATH = 'Content/audio/';
 var BASEPATH   = 'Content/';
@@ -93,7 +87,7 @@ var q2q = function(figure, opponent) {
 		return false;		
 	else if(figure.y + 4 > opponent.y + opponent.state * 32)
 		return false;
-		
+
 	return true;
 };
 Math.sign = function(x) {
@@ -101,6 +95,6 @@ Math.sign = function(x) {
 		return 1;
 	else if(x < 0)
 		return -1;
-		
+
 	return 0;
 };

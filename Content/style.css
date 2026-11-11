@@ -17,6 +17,7 @@
    width: 100%;
    position: relative;
    border: 1px solid #ccc;
+   box-sizing: border-box;
    overflow: hidden;
  }
  
@@ -94,4 +95,211 @@
    width: 32px;
    height: 32px;
  }
- 
+
+ .hudButton {
+   position: absolute;
+   top: 14px;
+   left: 50%;
+   transform: translateX(-50%);
+   z-index: 1001;
+   padding: 8px 16px;
+   font-family: 'SMB', Arial, sans-serif;
+   font-size: 16px;
+   font-weight: bold;
+   letter-spacing: 0.5px;
+   color: #fff;
+   background: #e52521;
+   border: 3px solid #000;
+   border-radius: 6px;
+   box-shadow: 0 3px 0 #7a0f0c;
+   cursor: pointer;
+   user-select: none;
+ }
+
+ .hudButton:hover {
+   background: #ff3b36;
+ }
+
+ .hudButton:active {
+   transform: translateX(-50%) translateY(2px);
+   box-shadow: 0 1px 0 #7a0f0c;
+ }
+
+ #pauseBanner {
+   display: none;
+   position: absolute;
+   top: 72px;
+   left: 50%;
+   transform: translateX(-50%);
+   z-index: 1500;
+   padding: 10px 20px;
+   font-family: 'SMB', Arial, sans-serif;
+   font-size: 18px;
+   color: #fbd000;
+   background: rgba(0, 0, 0, 0.85);
+   border: 3px solid #fbd000;
+   border-radius: 8px;
+   white-space: nowrap;
+ }
+
+ #pauseBanner.is-open {
+   display: block;
+ }
+
+ #helpModal {
+   display: none;
+   position: absolute;
+   inset: 0;
+   z-index: 2000;
+   background: rgba(0, 0, 0, 0.72);
+   align-items: center;
+   justify-content: center;
+   padding: 16px;
+   box-sizing: border-box;
+ }
+
+ #helpModal.is-open {
+   display: flex;
+ }
+
+ #helpCard {
+   width: 100%;
+   max-width: 600px;
+   max-height: 90vh;
+   display: flex;
+   flex-direction: column;
+   background: #fff9e6;
+   color: #1f1f1f;
+   border: 4px solid #000;
+   border-radius: 10px;
+   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+   padding: 14px 20px;
+   box-sizing: border-box;
+   font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+   font-size: 13px;
+   line-height: 1.4;
+ }
+
+ .helpHeader {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   flex-shrink: 0;
+   border-bottom: 2px solid #e2cfa0;
+   padding-bottom: 8px;
+   margin-bottom: 10px;
+ }
+
+ .helpBody {
+   overflow-y: auto;
+   flex: 1 1 auto;
+   padding-right: 4px;
+ }
+
+ #helpTitle {
+   margin: 0;
+   font-family: 'SMB', Arial, sans-serif;
+   font-size: 22px;
+   color: #e52521;
+ }
+
+ .closeIcon {
+   background: transparent;
+   border: none;
+   font-size: 26px;
+   line-height: 1;
+   color: #333;
+   cursor: pointer;
+   padding: 2px 6px;
+ }
+
+ .closeIcon:hover {
+   color: #e52521;
+ }
+
+ .helpSection {
+   margin-bottom: 14px;
+ }
+
+ .helpSection h3 {
+   margin: 0 0 6px;
+   font-size: 14px;
+   text-transform: uppercase;
+   letter-spacing: 0.6px;
+   color: #049cd8;
+ }
+
+ .helpList {
+   list-style: none;
+   margin: 0;
+   padding: 0;
+ }
+
+ .helpList li {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   padding: 4px 0;
+   border-bottom: 1px dashed #eadbb5;
+ }
+
+ .helpList li:last-child {
+   border-bottom: none;
+ }
+
+ .helpList.plainList li {
+   display: block;
+ }
+
+ .keyGroup {
+   white-space: nowrap;
+   flex-shrink: 0;
+ }
+
+ #helpCard kbd {
+   display: inline-block;
+   padding: 2px 7px;
+   font-family: Consolas, 'Courier New', monospace;
+   font-size: 12px;
+   font-weight: 700;
+   color: #111;
+   background: #fff;
+   border: 1px solid #888;
+   border-bottom-width: 3px;
+   border-radius: 4px;
+ }
+
+ #helpCard code {
+   font-weight: bold;
+   color: #c86400;
+ }
+
+ .helpFooter {
+   margin-top: 10px;
+   padding-top: 10px;
+   border-top: 2px solid #e2cfa0;
+   flex-shrink: 0;
+   text-align: center;
+ }
+
+ .primaryBtn {
+   padding: 10px 22px;
+   font-family: 'SMB', Arial, sans-serif;
+   font-size: 15px;
+   color: #fff;
+   background: #43b047;
+   border: 3px solid #000;
+   border-radius: 6px;
+   box-shadow: 0 3px 0 #1f6422;
+   cursor: pointer;
+ }
+
+ .primaryBtn:hover {
+   background: #4ec953;
+ }
+
+ .primaryBtn:active {
+   transform: translateY(2px);
+   box-shadow: 0 1px 0 #1f6422;
+ }

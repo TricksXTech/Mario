@@ -1,30 +1,4 @@
-﻿/*
- * *****
- * WRITTEN BY FLORIAN RAPPL, 2012.
- * florian-rappl.de
- * mail@florian-rappl.de
- * *****
- */
- 
-/* LEVELS ORIGINALLY BY
- *
- *
- *        MARTIN BUCHNER
- *               &
- *         PATRICK SAAR
- *
- *
- */
-
-/* FORMAT OF A LEVEL FOR JSON SERIALIZATION:
-	{
-		height: int,
-		width: int,
-		data: array[array],
-		id: int,
-		background: int
-	}
-*/
+﻿
 
 var definedLevels = [
 {
