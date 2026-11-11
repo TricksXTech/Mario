@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Mario - TricksXTech</title>
 <link href="Content/style.css" rel="stylesheet" />
 </head>
@@ -11,10 +12,45 @@
 </div>
 <div id="coinNumber" class="gauge">0</div>
 <div id="coin" class="gaugeSprite"></div>
-<button id="helpBtn" type="button" class="hudButton" title="Game Controls &amp; Guide (H)">? HELP</button>
 <div id="liveNumber" class="gauge">0</div>
 <div id="live" class="gaugeSprite"></div>
-<div id="pauseBanner" role="status" aria-live="polite">PAUSED &mdash; Press P to Resume</div>
+</div>
+<div id="hudActions">
+  <button id="pauseBtn" type="button" class="hudButton hudSecondary" title="Pause / Resume Game (P)">PAUSE</button>
+  <button id="helpBtn" type="button" class="hudButton" title="Game Controls &amp; Guide (H)">? HELP</button>
+</div>
+<div id="pauseBanner" role="status" aria-live="polite">PAUSED &mdash; Tap Here or Press P to Resume</div>
+<div id="touchControls" aria-hidden="true">
+  <div id="dpadCluster" role="group" aria-label="Directional Controls">
+    <div class="dpadTopRow">
+      <button type="button" class="touchBtn dpadBtn dpadLeft" data-action="left" aria-label="Move Left">&#9664;</button>
+      <button type="button" class="touchBtn dpadBtn dpadRight" data-action="right" aria-label="Move Right">&#9654;</button>
+    </div>
+    <div class="dpadBottomRow">
+      <button type="button" class="touchBtn dpadBtn dpadDown" data-action="down" aria-label="Crouch">&#9660;</button>
+    </div>
+  </div>
+  <div id="actionCluster" role="group" aria-label="Action Controls">
+    <button type="button" class="touchBtn actionBtn fireBtn" data-action="accelerate" aria-label="Sprint and Fire"><span class="btnGlyph">B</span><span class="btnLabel">RUN / FIRE</span></button>
+    <button type="button" class="touchBtn actionBtn jumpBtn" data-action="up" aria-label="Jump"><span class="btnGlyph">A</span><span class="btnLabel">JUMP</span></button>
+  </div>
+</div>
+<div id="orientationGate" role="dialog" aria-modal="true" aria-labelledby="orientationTitle" aria-hidden="true">
+  <div id="orientationCard">
+    <div class="rotateVisual" aria-hidden="true">
+      <div class="phoneOutline">
+        <div class="phoneScreen">
+          <div class="rotateArrows">&#8635;</div>
+        </div>
+        <div class="phoneBar"></div>
+      </div>
+    </div>
+    <h2 id="orientationTitle">ROTATE TO LANDSCAPE</h2>
+    <p class="orientationText">Landscape mode is mandatory on phones, tablets, and iPads. Turn your device sideways to start playing.</p>
+    <button id="enterLandscapeBtn" type="button" class="primaryBtn">TRY LANDSCAPE FULLSCREEN</button>
+    <p id="rotateHint" class="orientationHint">Game will start automatically once your screen is in landscape.</p>
+  </div>
+</div>
 <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-hidden="true">
   <div id="helpCard">
     <div class="helpHeader">
@@ -23,7 +59,7 @@
     </div>
     <div class="helpBody">
       <div class="helpSection">
-        <h3>Controls</h3>
+        <h3>Keyboard Controls</h3>
         <ul class="helpList">
           <li><span class="keyGroup"><kbd>&larr;</kbd> <kbd>&rarr;</kbd></span><span>Move Left / Right</span></li>
           <li><span class="keyGroup"><kbd>&uarr;</kbd> or <kbd>Space</kbd></span><span>Jump &amp; Stomp Enemies</span></li>
@@ -34,11 +70,20 @@
         </ul>
       </div>
       <div class="helpSection">
+        <h3>Touch Controls (Mobile / Tablet / iPad)</h3>
+        <ul class="helpList">
+          <li><span class="keyGroup"><kbd>&#9664;</kbd> <kbd>&#9654;</kbd> / <kbd>&#9660;</kbd></span><span>Slide or Tap to Move &amp; Crouch</span></li>
+          <li><span class="keyGroup"><kbd>A JUMP</kbd></span><span>Jump &amp; Stomp Enemies</span></li>
+          <li><span class="keyGroup"><kbd>B RUN / FIRE</kbd></span><span>Hold to Sprint &bull; Tap to Shoot Fireballs</span></li>
+          <li><span class="keyGroup"><kbd>PAUSE</kbd> / <kbd>? HELP</kbd></span><span>Top Center Buttons to Pause or View Guide</span></li>
+        </ul>
+      </div>
+      <div class="helpSection">
         <h3>Power-Ups &amp; Items</h3>
         <ul class="helpList plainList">
           <li><strong>Coins:</strong> Collect 100 coins to earn an extra life (+1 UP).</li>
           <li><strong>Mushroom (<code>?</code> Box):</strong> Grow into Big Mario to survive a hit.</li>
-          <li><strong>Fire Flower (<code>?</code> Box when Big):</strong> Throw bouncing fireballs with Sprint/Fire keys.</li>
+          <li><strong>Fire Flower (<code>?</code> Box when Big):</strong> Throw bouncing fireballs with Sprint/Fire.</li>
           <li><strong>Star (<code>?</code> Box):</strong> Temporary invincibility &mdash; defeat enemies on contact.</li>
         </ul>
       </div>
@@ -55,7 +100,6 @@
       <button id="closeHelpBtn" type="button" class="primaryBtn">RESUME GAME</button>
     </div>
   </div>
-</div>
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script src="Scripts/testlevels.js"></script>

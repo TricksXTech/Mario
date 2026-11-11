@@ -11,53 +11,94 @@
             keys.reset();
         });
     },
+    syncAction: function(action) {
+        keys[action] = Boolean(keys.keyboardState[action] || keys.touchState[action]);
+    },
+    resetTouch: function() {
+        keys.touchState.left = false;
+        keys.touchState.right = false;
+        keys.touchState.accelerate = false;
+        keys.touchState.up = false;
+        keys.touchState.down = false;
+        keys.syncAction('left');
+        keys.syncAction('right');
+        keys.syncAction('accelerate');
+        keys.syncAction('up');
+        keys.syncAction('down');
+        if (typeof keys.onReset === 'function') {
+            keys.onReset();
+        }
+    },
     reset: function() {
-        keys.left = false;
-        keys.right = false;
-        keys.accelerate = false;
-        keys.up = false;
+        keys.keyboardState.left = false;
+        keys.keyboardState.right = false;
+        keys.keyboardState.accelerate = false;
+        keys.keyboardState.up = false;
+        keys.keyboardState.down = false;
         keys.jumpQueued = false;
-        keys.down = false;
+        keys.resetTouch();
     },
     unbind: function() {
         $(document).off('.mario');
         $(window).off('.mario');
+    },
+    setTouchAction: function(action, status) {
+        if (!status) {
+            keys.touchState[action] = false;
+            keys.syncAction(action);
+            return;
+        }
+        if (!keys.enabled) {
+            return;
+        }
+        var wasUp = keys.up;
+        keys.touchState[action] = true;
+        keys.syncAction(action);
+        if (action === 'up' && !wasUp) {
+            keys.jumpQueued = true;
+        }
     },
     handler: function(event, status) {
         if (!keys.enabled) {
             return true;
         }
 
+        var action = null;
         switch (event.keyCode) {
             case 57392:
             case 17:
             case 16:
             case 65:
-                keys.accelerate = status;
+                action = 'accelerate';
                 break;
             case 40:
-                keys.down = status;
+                action = 'down';
                 break;
             case 39:
-                keys.right = status;
+                action = 'right';
                 break;
             case 37:
-                keys.left = status;
+                action = 'left';
                 break;
             case 38:
             case 32:
-                if (status && !keys.up) {
-                    keys.jumpQueued = true;
-                }
-                keys.up = status;
+                action = 'up';
                 break;
             default:
                 return true;
         }
 
+        var wasUp = keys.up;
+        keys.keyboardState[action] = status;
+        keys.syncAction(action);
+        if (action === 'up' && status && !wasUp) {
+            keys.jumpQueued = true;
+        }
+
         event.preventDefault();
         return false;
     },
+    onReset: null,
     enabled: true,
     accelerate: false,
     left: false,
@@ -65,6 +106,20 @@
     jumpQueued: false,
     right: false,
     down: false,
+    keyboardState: {
+        accelerate: false,
+        left: false,
+        up: false,
+        right: false,
+        down: false,
+    },
+    touchState: {
+        accelerate: false,
+        left: false,
+        up: false,
+        right: false,
+        down: false,
+    },
 };
 
 keys.bind();

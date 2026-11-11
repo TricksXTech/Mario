@@ -8,8 +8,13 @@
  body, html {
    margin: 0;
    padding: 0;
+   width: 100%;
    height: 100%;
    overflow: hidden;
+   position: relative;
+   background: #000;
+   overscroll-behavior: none;
+   -webkit-tap-highlight-color: transparent;
  }
  
  #game {
@@ -19,6 +24,7 @@
    border: 1px solid #ccc;
    box-sizing: border-box;
    overflow: hidden;
+   transform-origin: 0 0;
  }
  
  #world { 
@@ -96,15 +102,22 @@
    height: 32px;
  }
 
- .hudButton {
-   position: absolute;
-   top: 14px;
+ #hudActions {
+   position: fixed;
+   top: max(12px, env(safe-area-inset-top));
    left: 50%;
    transform: translateX(-50%);
-   z-index: 1001;
-   padding: 8px 16px;
+   z-index: 1600;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+ }
+
+ .hudButton {
+   position: relative;
+   padding: 8px 14px;
    font-family: 'SMB', Arial, sans-serif;
-   font-size: 16px;
+   font-size: 15px;
    font-weight: bold;
    letter-spacing: 0.5px;
    color: #fff;
@@ -114,6 +127,9 @@
    box-shadow: 0 3px 0 #7a0f0c;
    cursor: pointer;
    user-select: none;
+   -webkit-user-select: none;
+   touch-action: manipulation;
+   white-space: nowrap;
  }
 
  .hudButton:hover {
@@ -121,36 +137,308 @@
  }
 
  .hudButton:active {
-   transform: translateX(-50%) translateY(2px);
+   transform: translateY(2px);
    box-shadow: 0 1px 0 #7a0f0c;
+ }
+
+ .hudSecondary {
+   background: #049cd8;
+   box-shadow: 0 3px 0 #02577a;
+ }
+
+ .hudSecondary:hover {
+   background: #1ab4f0;
+ }
+
+ .hudSecondary:active {
+   box-shadow: 0 1px 0 #02577a;
+ }
+
+ .hudSecondary.is-paused {
+   background: #43b047;
+   box-shadow: 0 3px 0 #1f6422;
  }
 
  #pauseBanner {
    display: none;
-   position: absolute;
-   top: 72px;
+   position: fixed;
+   top: 68px;
    left: 50%;
    transform: translateX(-50%);
-   z-index: 1500;
+   z-index: 1600;
    padding: 10px 20px;
    font-family: 'SMB', Arial, sans-serif;
-   font-size: 18px;
+   font-size: 16px;
    color: #fbd000;
-   background: rgba(0, 0, 0, 0.85);
+   background: rgba(0, 0, 0, 0.86);
    border: 3px solid #fbd000;
    border-radius: 8px;
    white-space: nowrap;
+   cursor: pointer;
+   user-select: none;
  }
 
  #pauseBanner.is-open {
    display: block;
  }
 
+ #touchControls {
+   display: none;
+   position: fixed;
+   inset: 0;
+   z-index: 1400;
+   pointer-events: none;
+   user-select: none;
+   -webkit-user-select: none;
+   -webkit-touch-callout: none;
+   touch-action: none;
+ }
+
+ #touchControls.is-visible {
+   display: block;
+ }
+
+ #dpadCluster {
+   position: absolute;
+   left: max(18px, env(safe-area-inset-left));
+   bottom: max(16px, env(safe-area-inset-bottom));
+   pointer-events: auto;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 8px;
+   touch-action: none;
+ }
+
+ .dpadTopRow {
+   display: flex;
+   align-items: center;
+   gap: 14px;
+ }
+
+ .dpadBottomRow {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+ }
+
+ #actionCluster {
+   position: absolute;
+   right: max(18px, env(safe-area-inset-right));
+   bottom: max(16px, env(safe-area-inset-bottom));
+   pointer-events: auto;
+   display: flex;
+   align-items: flex-end;
+   gap: 14px;
+   touch-action: none;
+ }
+
+ .touchBtn {
+   appearance: none;
+   -webkit-appearance: none;
+   padding: 0;
+   margin: 0;
+   color: #fff;
+   font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+   font-weight: 800;
+   cursor: pointer;
+   outline: none;
+   user-select: none;
+   -webkit-user-select: none;
+   -webkit-touch-callout: none;
+   touch-action: none;
+   transition: transform 0.05s ease, filter 0.05s ease, background 0.05s ease;
+ }
+
+ .dpadBtn {
+   width: 64px;
+   height: 54px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 24px;
+   background: rgba(18, 22, 34, 0.72);
+   border: 3px solid rgba(255, 255, 255, 0.72);
+   border-radius: 14px;
+   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.65), 0 6px 14px rgba(0, 0, 0, 0.35);
+ }
+
+ .dpadDown {
+   width: 64px;
+   height: 46px;
+   font-size: 20px;
+ }
+
+ .dpadBtn.is-pressed {
+   background: rgba(251, 208, 0, 0.9);
+   color: #111;
+   border-color: #fff;
+   transform: translateY(2px) scale(0.95);
+   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.65);
+ }
+
+ .actionBtn {
+   border-radius: 50%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   border: 3px solid rgba(255, 255, 255, 0.85);
+   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.65), 0 8px 18px rgba(0, 0, 0, 0.4);
+ }
+
+ .actionBtn .btnGlyph {
+   font-family: 'SMB', Arial, sans-serif;
+   font-size: 20px;
+   line-height: 1.05;
+ }
+
+ .actionBtn .btnLabel {
+   font-size: 9px;
+   letter-spacing: 0.4px;
+   margin-top: 2px;
+   opacity: 0.95;
+ }
+
+ .fireBtn {
+   width: 68px;
+   height: 68px;
+   background: rgba(229, 37, 33, 0.8);
+   margin-bottom: 4px;
+ }
+
+ .jumpBtn {
+   width: 78px;
+   height: 78px;
+   background: rgba(67, 176, 71, 0.84);
+   margin-bottom: 14px;
+ }
+
+ .actionBtn.is-pressed {
+   filter: brightness(1.22);
+   border-color: #fbd000;
+   transform: translateY(3px) scale(0.94);
+   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.7);
+ }
+
+ #orientationGate {
+   display: none;
+   position: fixed;
+   inset: 0;
+   z-index: 3000;
+   background: radial-gradient(circle at center, #1b2d56 0%, #090e1b 100%);
+   align-items: center;
+   justify-content: center;
+   padding: 20px;
+   box-sizing: border-box;
+   text-align: center;
+   color: #fff;
+   font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+ }
+
+ #orientationGate.is-open {
+   display: flex;
+ }
+
+ #orientationCard {
+   width: 100%;
+   max-width: 420px;
+   background: rgba(16, 24, 44, 0.94);
+   border: 4px solid #fbd000;
+   border-radius: 14px;
+   padding: 26px 20px;
+   box-sizing: border-box;
+   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+ }
+
+ .rotateVisual {
+   height: 92px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   margin-bottom: 16px;
+ }
+
+ .phoneOutline {
+   width: 46px;
+   height: 78px;
+   border: 3px solid #fbd000;
+   border-radius: 9px;
+   background: rgba(4, 156, 216, 0.22);
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: space-between;
+   padding: 6px 4px 4px;
+   box-sizing: border-box;
+   animation: rotatePhone 2.2s ease-in-out infinite;
+ }
+
+ .phoneScreen {
+   width: 100%;
+   flex: 1 1 auto;
+   border-radius: 4px;
+   background: rgba(255, 255, 255, 0.12);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+ }
+
+ .rotateArrows {
+   font-size: 24px;
+   line-height: 1;
+   color: #fbd000;
+   font-weight: bold;
+ }
+
+ .phoneBar {
+   width: 14px;
+   height: 3px;
+   border-radius: 2px;
+   background: rgba(255, 255, 255, 0.65);
+   margin-top: 4px;
+ }
+
+ @keyframes rotatePhone {
+   0%, 15% {
+     transform: rotate(0deg);
+   }
+   45%, 75% {
+     transform: rotate(-90deg);
+   }
+   90%, 100% {
+     transform: rotate(0deg);
+   }
+ }
+
+ #orientationTitle {
+   margin: 0 0 10px;
+   font-family: 'SMB', Arial, sans-serif;
+   font-size: 20px;
+   line-height: 1.3;
+   color: #fbd000;
+ }
+
+ .orientationText {
+   margin: 0 0 18px;
+   font-size: 14px;
+   line-height: 1.5;
+   color: #e4ecff;
+ }
+
+ .orientationHint {
+   margin: 14px 0 0;
+   font-size: 12px;
+   line-height: 1.4;
+   color: #a9bae2;
+ }
+
  #helpModal {
    display: none;
-   position: absolute;
+   position: fixed;
    inset: 0;
-   z-index: 2000;
+   z-index: 2500;
    background: rgba(0, 0, 0, 0.72);
    align-items: center;
    justify-content: center;
@@ -302,4 +590,91 @@
  .primaryBtn:active {
    transform: translateY(2px);
    box-shadow: 0 1px 0 #1f6422;
+ }
+
+ @media (max-height: 440px) {
+   #hudActions {
+     top: max(8px, env(safe-area-inset-top));
+     gap: 8px;
+   }
+
+   .hudButton {
+     padding: 6px 10px;
+     font-size: 12px;
+   }
+
+   #pauseBanner {
+     top: 52px;
+     font-size: 13px;
+     padding: 8px 14px;
+   }
+
+   #dpadCluster {
+     left: max(12px, env(safe-area-inset-left));
+     bottom: max(10px, env(safe-area-inset-bottom));
+     gap: 6px;
+   }
+
+   .dpadTopRow {
+     gap: 10px;
+   }
+
+   .dpadBtn {
+     width: 56px;
+     height: 48px;
+     font-size: 20px;
+   }
+
+   .dpadDown {
+     width: 56px;
+     height: 42px;
+     font-size: 18px;
+   }
+
+   #actionCluster {
+     right: max(12px, env(safe-area-inset-right));
+     bottom: max(10px, env(safe-area-inset-bottom));
+     gap: 10px;
+   }
+
+   .fireBtn {
+     width: 60px;
+     height: 60px;
+   }
+
+   .fireBtn .btnLabel {
+     font-size: 7.5px;
+     letter-spacing: 0.1px;
+   }
+
+   .jumpBtn {
+     width: 68px;
+     height: 68px;
+     margin-bottom: 10px;
+   }
+ }
+
+ @media (min-width: 900px) and (min-height: 600px) {
+   .dpadBtn {
+     width: 74px;
+     height: 62px;
+     font-size: 28px;
+   }
+
+   .dpadDown {
+     width: 74px;
+     height: 54px;
+     font-size: 22px;
+   }
+
+   .fireBtn {
+     width: 76px;
+     height: 76px;
+   }
+
+   .jumpBtn {
+     width: 88px;
+     height: 88px;
+     margin-bottom: 18px;
+   }
  }

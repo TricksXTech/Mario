@@ -1739,26 +1739,315 @@ var PipePlant = Plant.extend({
 }, 'pipeplant');
 
 $(document).ready(function() {
+	var $game = $('#game');
 	var level = new Level('world');
 	level.load(definedLevels[0]);
-	level.start();
 	keys.bind();
 
 	var $helpModal = $('#helpModal');
 	var $helpBtn = $('#helpBtn');
+	var $pauseBtn = $('#pauseBtn');
 	var $pauseBanner = $('#pauseBanner');
+	var $touchControls = $('#touchControls');
+	var $orientationGate = $('#orientationGate');
+	var $enterLandscapeBtn = $('#enterLandscapeBtn');
+	var $rotateHint = $('#rotateHint');
+	var $touchButtons = $touchControls.find('[data-action]');
+	var dpadEl = document.getElementById('dpadCluster');
+	var touchControlsEl = document.getElementById('touchControls');
+
 	var isHelpOpen = false;
 	var isUserPaused = false;
+	var isBlockedByOrientation = false;
+	var activePointers = {};
+	var TOUCH_ACTIONS = ['left', 'right', 'down', 'up', 'accelerate'];
+	var syncTimer = null;
+
+	function isNonKeyboardDevice() {
+		var ua = navigator.userAgent || '';
+		var hasTouch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+		var coarsePrimary = Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+		var fineHoverPrimary = Boolean(window.matchMedia && window.matchMedia('(pointer: fine) and (hover: hover)').matches);
+		var mobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+		var iPadOs = (/Macintosh/i.test(ua) || navigator.platform === 'MacIntel') && (navigator.maxTouchPoints || 0) > 1;
+		if(mobileUa || iPadOs || coarsePrimary)
+			return true;
+		if(hasTouch && !fineHoverPrimary)
+			return true;
+		return false;
+	}
+
+	function isLandscapeViewport() {
+		if(window.innerWidth > window.innerHeight)
+			return true;
+		if(window.innerWidth < window.innerHeight)
+			return false;
+		if(screen.orientation && screen.orientation.type)
+			return screen.orientation.type.indexOf('landscape') === 0;
+		return window.matchMedia ? window.matchMedia('(orientation: landscape)').matches : true;
+	}
+
+	function fitGameViewport(nonKeyboard) {
+		var vw = window.innerWidth || document.documentElement.clientWidth || 0;
+		var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+		if(vw <= 0 || vh <= 0)
+			return;
+
+		if(nonKeyboard || vh < 480 || vw < 640) {
+			var scale = Math.min(vw / 640, vh / 480);
+			if(!nonKeyboard && scale > 1)
+				scale = 1;
+			var logicalWidth = Math.ceil(vw / scale);
+			var logicalHeight = Math.ceil(vh / scale);
+			$game.css({
+				width: logicalWidth + 'px',
+				height: logicalHeight + 'px',
+				transform: 'scale(' + scale + ')'
+			});
+		} else {
+			$game.css({
+				width: '100%',
+				height: '100%',
+				transform: 'none'
+			});
+		}
+	}
+
+	function syncTouchButtons() {
+		var nextPressed = {
+			left: false,
+			right: false,
+			down: false,
+			up: false,
+			accelerate: false
+		};
+		for(var id in activePointers) {
+			if(Object.prototype.hasOwnProperty.call(activePointers, id)) {
+				var action = activePointers[id].action;
+				if(action && Object.prototype.hasOwnProperty.call(nextPressed, action))
+					nextPressed[action] = true;
+			}
+		}
+		for(var i = 0; i < TOUCH_ACTIONS.length; i++) {
+			var act = TOUCH_ACTIONS[i];
+			keys.setTouchAction(act, nextPressed[act]);
+		}
+		$touchButtons.each(function() {
+			var $btn = $(this);
+			var act = $btn.attr('data-action');
+			$btn.toggleClass('is-pressed', Boolean(nextPressed[act]));
+		});
+	}
+
+	function releaseAllTouchPointers() {
+		activePointers = {};
+		for(var i = 0; i < TOUCH_ACTIONS.length; i++)
+			keys.setTouchAction(TOUCH_ACTIONS[i], false);
+		$touchButtons.removeClass('is-pressed');
+	}
+
+	keys.onReset = releaseAllTouchPointers;
+
+	function updatePlayState() {
+		if(isBlockedByOrientation || isHelpOpen || isUserPaused) {
+			level.pause();
+			keys.reset();
+			keys.enabled = false;
+			return;
+		}
+		keys.enabled = true;
+		level.start();
+	}
+
+	function updatePauseUi() {
+		if(isUserPaused) {
+			$pauseBtn.text('RESUME').addClass('is-paused');
+			if(!isHelpOpen && !isBlockedByOrientation)
+				$pauseBanner.addClass('is-open');
+			else
+				$pauseBanner.removeClass('is-open');
+		} else {
+			$pauseBtn.text('PAUSE').removeClass('is-paused');
+			$pauseBanner.removeClass('is-open');
+		}
+	}
+
+	function syncDeviceState() {
+		var nonKeyboard = isNonKeyboardDevice();
+		var landscape = isLandscapeViewport();
+		fitGameViewport(nonKeyboard);
+
+		$('body').toggleClass('touch-mode', nonKeyboard);
+
+		if(nonKeyboard) {
+			if(!landscape) {
+				isBlockedByOrientation = true;
+				$orientationGate.addClass('is-open').attr('aria-hidden', 'false');
+				$touchControls.removeClass('is-visible').attr('aria-hidden', 'true');
+				updatePauseUi();
+				updatePlayState();
+				return;
+			}
+			isBlockedByOrientation = false;
+			$orientationGate.removeClass('is-open').attr('aria-hidden', 'true');
+			$touchControls.addClass('is-visible').attr('aria-hidden', 'false');
+		} else {
+			isBlockedByOrientation = false;
+			$orientationGate.removeClass('is-open').attr('aria-hidden', 'true');
+			$touchControls.removeClass('is-visible').attr('aria-hidden', 'true');
+		}
+
+		updatePauseUi();
+		updatePlayState();
+	}
+
+	function scheduleSync() {
+		syncDeviceState();
+		if(syncTimer)
+			clearTimeout(syncTimer);
+		syncTimer = setTimeout(syncDeviceState, 120);
+	}
+
+	function resolveDpadAction(clientX, clientY) {
+		var el = document.elementFromPoint(clientX, clientY);
+		if(el && el.closest) {
+			var hitBtn = el.closest('#dpadCluster [data-action]');
+			if(hitBtn)
+				return hitBtn.getAttribute('data-action');
+		}
+		if(dpadEl) {
+			var rect = dpadEl.getBoundingClientRect();
+			if(clientX >= rect.left - 12 && clientX <= rect.right + 12 && clientY >= rect.top - 12 && clientY <= rect.bottom + 12) {
+				var relX = clientX - rect.left;
+				var relY = clientY - rect.top;
+				if(relY > rect.height * 0.56 && relX > rect.width * 0.2 && relX < rect.width * 0.8)
+					return 'down';
+				return relX < rect.width * 0.5 ? 'left' : 'right';
+			}
+		}
+		return null;
+	}
+
+	function bindTouchControls() {
+		if(touchControlsEl) {
+			touchControlsEl.addEventListener('touchstart', function(event) {
+				event.preventDefault();
+			}, { passive: false });
+			touchControlsEl.addEventListener('touchmove', function(event) {
+				event.preventDefault();
+			}, { passive: false });
+			touchControlsEl.addEventListener('contextmenu', function(event) {
+				event.preventDefault();
+			});
+		}
+
+		if(window.PointerEvent) {
+			$touchControls.on('pointerdown', '[data-action]', function(event) {
+				event.preventDefault();
+				var nativeEvent = event.originalEvent || event;
+				var pointerId = nativeEvent.pointerId;
+				var action = $(this).attr('data-action');
+				var isDpad = $(this).closest('#dpadCluster').length > 0;
+				activePointers[pointerId] = { action: action, isDpad: isDpad };
+				if(this.setPointerCapture) {
+					try {
+						this.setPointerCapture(pointerId);
+					} catch(err) {}
+				}
+				syncTouchButtons();
+			});
+
+			$touchControls.on('pointermove', '[data-action]', function(event) {
+				var nativeEvent = event.originalEvent || event;
+				var pointerId = nativeEvent.pointerId;
+				var entry = activePointers[pointerId];
+				if(!entry || !entry.isDpad)
+					return;
+				event.preventDefault();
+				var nextAction = resolveDpadAction(nativeEvent.clientX, nativeEvent.clientY);
+				if(entry.action !== nextAction) {
+					entry.action = nextAction;
+					syncTouchButtons();
+				}
+			});
+
+			$touchControls.on('pointerup pointercancel lostpointercapture', '[data-action]', function(event) {
+				var nativeEvent = event.originalEvent || event;
+				var pointerId = nativeEvent.pointerId;
+				if(Object.prototype.hasOwnProperty.call(activePointers, pointerId)) {
+					delete activePointers[pointerId];
+					syncTouchButtons();
+				}
+			});
+
+			$(window).on('pointerup.touch pointercancel.touch blur.touch', function(event) {
+				var nativeEvent = event.originalEvent || event;
+				if(nativeEvent && nativeEvent.pointerId !== undefined) {
+					if(Object.prototype.hasOwnProperty.call(activePointers, nativeEvent.pointerId)) {
+						delete activePointers[nativeEvent.pointerId];
+						syncTouchButtons();
+					}
+				} else {
+					releaseAllTouchPointers();
+				}
+			});
+		} else if(touchControlsEl) {
+			touchControlsEl.addEventListener('touchstart', function(event) {
+				for(var i = 0; i < event.changedTouches.length; i++) {
+					var t = event.changedTouches[i];
+					var el = document.elementFromPoint(t.clientX, t.clientY);
+					var btn = el && el.closest ? el.closest('[data-action]') : null;
+					if(btn) {
+						activePointers[t.identifier] = {
+							action: btn.getAttribute('data-action'),
+							isDpad: Boolean(btn.closest('#dpadCluster'))
+						};
+					}
+				}
+				syncTouchButtons();
+			}, { passive: false });
+
+			touchControlsEl.addEventListener('touchmove', function(event) {
+				var changed = false;
+				for(var i = 0; i < event.changedTouches.length; i++) {
+					var t = event.changedTouches[i];
+					var entry = activePointers[t.identifier];
+					if(entry && entry.isDpad) {
+						var nextAct = resolveDpadAction(t.clientX, t.clientY);
+						if(entry.action !== nextAct) {
+							entry.action = nextAct;
+							changed = true;
+						}
+					}
+				}
+				if(changed)
+					syncTouchButtons();
+			}, { passive: false });
+
+			var handleTouchEnd = function(event) {
+				var changed = false;
+				for(var i = 0; i < event.changedTouches.length; i++) {
+					var t = event.changedTouches[i];
+					if(Object.prototype.hasOwnProperty.call(activePointers, t.identifier)) {
+						delete activePointers[t.identifier];
+						changed = true;
+					}
+				}
+				if(changed)
+					syncTouchButtons();
+			};
+			touchControlsEl.addEventListener('touchend', handleTouchEnd, { passive: false });
+			touchControlsEl.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+		}
+	}
 
 	function openHelp() {
 		if(isHelpOpen)
 			return;
 
 		isHelpOpen = true;
-		level.pause();
-		keys.reset();
-		keys.enabled = false;
-		$pauseBanner.removeClass('is-open');
+		updatePauseUi();
+		updatePlayState();
 		$helpModal.addClass('is-open').attr('aria-hidden', 'false');
 	}
 
@@ -1768,32 +2057,28 @@ $(document).ready(function() {
 
 		isHelpOpen = false;
 		$helpModal.removeClass('is-open').attr('aria-hidden', 'true');
-
-		if(isUserPaused) {
-			$pauseBanner.addClass('is-open');
-		} else {
-			keys.enabled = true;
-			level.start();
-		}
+		updatePauseUi();
+		updatePlayState();
 	}
 
 	function togglePause() {
-		if(isHelpOpen)
+		if(isHelpOpen || isBlockedByOrientation)
 			return;
 
 		isUserPaused = !isUserPaused;
-
-		if(isUserPaused) {
-			level.pause();
-			keys.reset();
-			keys.enabled = false;
-			$pauseBanner.addClass('is-open');
-		} else {
-			$pauseBanner.removeClass('is-open');
-			keys.enabled = true;
-			level.start();
-		}
+		updatePauseUi();
+		updatePlayState();
 	}
+
+	$pauseBtn.on('click', function() {
+		$(this).blur();
+		togglePause();
+	});
+
+	$pauseBanner.on('click', function() {
+		if(isUserPaused && !isHelpOpen && !isBlockedByOrientation)
+			togglePause();
+	});
 
 	$helpBtn.on('click', function() {
 		$(this).blur();
@@ -1813,6 +2098,33 @@ $(document).ready(function() {
 			closeHelp();
 	});
 
+	$enterLandscapeBtn.on('click', function() {
+		$(this).blur();
+		var rootEl = document.documentElement;
+		var fsPromise = null;
+		if(rootEl.requestFullscreen)
+			fsPromise = rootEl.requestFullscreen();
+		else if(rootEl.webkitRequestFullscreen)
+			fsPromise = rootEl.webkitRequestFullscreen();
+
+		function attemptLock() {
+			if(screen.orientation && screen.orientation.lock) {
+				Promise.resolve(screen.orientation.lock('landscape')).then(function() {
+					scheduleSync();
+				}).catch(function() {
+					$rotateHint.text('Please rotate your device physically sideways into landscape.');
+				});
+			} else {
+				$rotateHint.text('Auto-rotate is not supported in this browser. Turn your device sideways to play.');
+			}
+		}
+
+		if(fsPromise && typeof fsPromise.then === 'function')
+			fsPromise.then(attemptLock).catch(attemptLock);
+		else
+			attemptLock();
+	});
+
 	$(document).on('keydown.ui', function(event) {
 		if(event.keyCode === 72 || event.key === '?') {
 			event.preventDefault();
@@ -1823,9 +2135,30 @@ $(document).ready(function() {
 		} else if(event.keyCode === 27 && isHelpOpen) {
 			event.preventDefault();
 			closeHelp();
-		} else if(event.keyCode === 80 && !isHelpOpen) {
+		} else if(event.keyCode === 80 && !isHelpOpen && !isBlockedByOrientation) {
 			event.preventDefault();
 			togglePause();
 		}
 	});
+
+	$(document).on('visibilitychange.ui', function() {
+		if(document.hidden)
+			keys.reset();
+	});
+
+	$(window).on('resize.ui orientationchange.ui', scheduleSync);
+	if(screen.orientation && screen.orientation.addEventListener)
+		screen.orientation.addEventListener('change', scheduleSync);
+
+	if(window.matchMedia) {
+		var pointerMq = window.matchMedia('(pointer: coarse)');
+		var orientMq = window.matchMedia('(orientation: landscape)');
+		if(pointerMq.addEventListener)
+			pointerMq.addEventListener('change', scheduleSync);
+		if(orientMq.addEventListener)
+			orientMq.addEventListener('change', scheduleSync);
+	}
+
+	bindTouchControls();
+	syncDeviceState();
 });
